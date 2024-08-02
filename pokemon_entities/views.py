@@ -4,7 +4,7 @@ import json
 from django.utils import timezone
 from django.http import HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404
-from pokemon_entities.models import Pokemon, PokemonEntity
+from pokemon_entities.models import Pokemon, PokemonEntity, PokemonElementType
 
 
 MOSCOW_CENTER = [55.751244, 37.618423]
@@ -15,7 +15,7 @@ DEFAULT_IMAGE_URL = (
 )
 
 
-def add_pokemon(folium_map, lat, lon, image_url=DEFAULT_IMAGE_URL):
+def add_pokemon(folium_map, lat, lon, name, image_url=DEFAULT_IMAGE_URL):
     icon = folium.features.CustomIcon(
         image_url,
         icon_size=(50, 50),
@@ -24,6 +24,7 @@ def add_pokemon(folium_map, lat, lon, image_url=DEFAULT_IMAGE_URL):
         [lat, lon],
         # Warning! `tooltip` attribute is disabled intentionally
         # to fix strange folium cyrillic encoding bug
+        popup=folium.Popup(f'Покемон: {name}\nШирота: {lat}\nДолгота: {lon}'),
         icon=icon,
     ).add_to(folium_map)
 
@@ -39,8 +40,10 @@ def show_all_pokemons(request):
     pokemons = PokemonEntity.objects.filter(appeared_at__lte=now, disappeared_at__gte=now)
     for pokemon in pokemons:
         add_pokemon(
-            folium_map, pokemon.lat,
+            folium_map,
+            pokemon.lat,
             pokemon.lon,
+            pokemon.pokemon.title,
             get_image_url(request, pokemon.pokemon)
         )
 
@@ -72,7 +75,7 @@ def show_pokemon(request, pokemon_id):
             "img_url": get_image_url(request, pokemon.previous_evolution),
         }
 
-    next_pokemon = pokemon.next_evolution.first()
+    next_pokemon = pokemon.next_evolutions.first()
     next_evolutions = {}
     if next_pokemon:
         next_evolutions = {
@@ -89,13 +92,19 @@ def show_pokemon(request, pokemon_id):
         "description": pokemon.description,
         "previous_evolution": previous_evolution,
         'next_evolution': next_evolutions,
+        'element_type': [],
     }
+
+    for elem in pokemon.element_type.all():
+        pokemon_data["element_type"].append({"img": get_image_url(request, elem),
+                                             "title": elem.title})
 
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
     for pokemon_entity in pokemons:
         add_pokemon(
             folium_map, pokemon_entity.lat,
             pokemon_entity.lon,
+            pokemon_entity.pokemon.title,
             get_image_url(request, pokemon_entity.pokemon)
         )
 
