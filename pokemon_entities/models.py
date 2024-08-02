@@ -4,6 +4,7 @@ from django.db import models  # noqa F401
 class PokemonElementType(models.Model):
     title = models.CharField(max_length=200, verbose_name="Наименование стихии")
     image = models.ImageField(blank=True, null=True, verbose_name="Значок")
+    strong_against = models.ManyToManyField('self', symmetrical=False)
 
     class Meta:
         ordering = ['title']

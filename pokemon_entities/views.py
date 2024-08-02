@@ -98,8 +98,12 @@ def show_pokemon(request, pokemon_id):
     }
 
     for elem in pokemon.element_type.all():
+        strong_against = []
+        for strong_element in elem.strong_against.all():
+            strong_against.append(strong_element.title)
         pokemon_data["element_type"].append({"img": get_image_url(request, elem),
-                                             "title": elem.title})
+                                             "title": elem.title,
+                                             'strong_against': strong_against})
 
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
     for pokemon_entity in current_pokemon:
