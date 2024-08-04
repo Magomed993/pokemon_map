@@ -10,7 +10,7 @@ class PokemonElementType(models.Model):
         ordering = ['title']
 
     def __str__(self):
-        return f'{self.title}'
+        return self.title
 
 
 class Pokemon(models.Model):
@@ -24,7 +24,7 @@ class Pokemon(models.Model):
     element_type = models.ManyToManyField(PokemonElementType, blank=True, null=True)
 
     def __str__(self):
-        return f'{self.title}'
+        return self.title
 
 
 class PokemonEntity(models.Model):
@@ -41,4 +41,4 @@ class PokemonEntity(models.Model):
     stamina = models.IntegerField(verbose_name="Выносливость", blank=True, null=True)
 
     def __str__(self):
-        return f'{self.pokemon.title}'
+        return self.pokemon.title
