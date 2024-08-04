@@ -65,9 +65,7 @@ def show_all_pokemons(request):
 
 
 def show_pokemon(request, pokemon_id):
-    now = timezone.localtime()
     pokemon = get_object_or_404(Pokemon, id=pokemon_id)
-    entity_specific_pokemon = PokemonEntity.objects.filter(pokemon=pokemon, appeared_at__lte=now, disappeared_at__gte=now)
 
     previous_evolution = {}
     if pokemon.previous_evolution:
@@ -103,7 +101,10 @@ def show_pokemon(request, pokemon_id):
                                              "title": elem.title,
                                              'strong_against': strong_against})
 
+    now = timezone.localtime()
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
+    entity_specific_pokemon = PokemonEntity.objects.filter(pokemon=pokemon, appeared_at__lte=now,
+                                                           disappeared_at__gte=now)
     for pokemon_entity in entity_specific_pokemon:
         add_pokemon(
             folium_map, pokemon_entity.lat,
