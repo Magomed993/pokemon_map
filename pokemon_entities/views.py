@@ -38,8 +38,8 @@ def get_image_url(request, pokemon):
 def show_all_pokemons(request):
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
     now = timezone.localtime()
-    pokemons = PokemonEntity.objects.filter(appeared_at__lte=now, disappeared_at__gte=now)
-    for pokemon in pokemons:
+    pokemon_entities = PokemonEntity.objects.filter(appeared_at__lte=now, disappeared_at__gte=now)
+    for pokemon in pokemon_entities:
         add_pokemon(
             folium_map,
             pokemon.lat,
@@ -49,7 +49,8 @@ def show_all_pokemons(request):
         )
 
     pokemons_on_page = []
-    for pokemon in Pokemon.objects.all():
+    pokemons = Pokemon.objects.all()
+    for pokemon in pokemons:
         pokemon_image_url = get_image_url(request, pokemon)
         pokemons_on_page.append({
             'pokemon_id': pokemon.id,
@@ -66,7 +67,7 @@ def show_all_pokemons(request):
 def show_pokemon(request, pokemon_id):
     now = timezone.localtime()
     pokemon = get_object_or_404(Pokemon, id=pokemon_id)
-    current_pokemon = PokemonEntity.objects.filter(pokemon=pokemon, appeared_at__lte=now, disappeared_at__gte=now)
+    entity_specific_pokemon = PokemonEntity.objects.filter(pokemon=pokemon, appeared_at__lte=now, disappeared_at__gte=now)
 
     previous_evolution = {}
     if pokemon.previous_evolution:
@@ -97,15 +98,13 @@ def show_pokemon(request, pokemon_id):
     }
 
     for elem in pokemon.element_type.all():
-        strong_against = []
-        for strong_element in elem.strong_against.all():
-            strong_against.append(strong_element.title)
+        strong_against = [strong_element.title for strong_element in elem.strong_against.all()]
         pokemon_data["element_type"].append({"img": get_image_url(request, elem),
                                              "title": elem.title,
                                              'strong_against': strong_against})
 
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
-    for pokemon_entity in current_pokemon:
+    for pokemon_entity in entity_specific_pokemon:
         add_pokemon(
             folium_map, pokemon_entity.lat,
             pokemon_entity.lon,
